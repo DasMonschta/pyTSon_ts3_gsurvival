@@ -1,9 +1,7 @@
 from ts3plugin import ts3plugin
-
-import ts3, ts3defines, os.path
-
-from ts3 import getPluginPath
-
+import ts3defines, os.path
+import ts3lib as ts3
+from ts3lib import getPluginPath
 from os import path
 from PythonQt.QtSql import QSqlDatabase
 from PythonQt.QtGui import *
@@ -21,7 +19,7 @@ class Gsurvival(ts3plugin):
     commandKeyword = ""
     infoTitle = None
     hotkeys = []
-    menuItems = [(ts3defines.PluginMenuType.PLUGIN_MENU_TYPE_GLOBAL, 0, "Gsurvival Einstellungen", "")]
+    menuItems = [(ts3defines.PluginMenuType.PLUGIN_MENU_TYPE_GLOBAL, 0, "GSurvival Einstellungen", "")]
 
     dlg = None
     gommeuid = "QTRtPmYiSKpMS8Oyd4hyztcvLqU="
@@ -67,21 +65,29 @@ class Gsurvival(ts3plugin):
         QSqlDatabase.removeDatabase("pyTSon_gsurvival")
         QSqlDatabase.removeDatabase("pyTSon_contacts")
 
+
     def configure(self, qParentWidget):
-        self.open_dlg()
+        try:
+            if not self.dlg: self.dlg = SettingsDialog(self)
+            self.dlg.show()
+            self.dlg.raise_()
+            self.dlg.activateWindow()
+        except:
+            try:
+                from traceback import format_exc; ts3.logMessage(format_exc(), ts3defines.LogLevel.LogLevel_ERROR, "PyTSon Script", 0)
+            except:
+                try:
+                     from traceback import format_exc; print(format_exc())
+                except:
+                    print("Unknown Error")
 
     def onMenuItemEvent(self, sch_id, a_type, menu_item_id, selected_item_id):
         if a_type == ts3defines.PluginMenuType.PLUGIN_MENU_TYPE_GLOBAL:
             if menu_item_id == 0:
-                self.open_dlg()
-
-    def open_dlg(self):
-        if not self.dlg:
-            self.dlg = SettingsDialog(self)
-        self.dlg.show()
-        self.dlg.raise_()
-        self.dlg.activateWindow()
-        return True
+                if not self.dlg: self.dlg = SettingsDialog(self)
+                self.dlg.show()
+                self.dlg.raise_()
+                self.dlg.activateWindow()
 
     def contactStatus(self, uid):
         q = self.db_c.exec_("SELECT * FROM contacts WHERE value LIKE '%%IDS=%s%%'" % uid)
@@ -135,10 +141,10 @@ class Gsurvival(ts3plugin):
                         elif tp > 5 and sgid == 13:
                             # Registriert
                             ts3.requestClientSetIsTalker(schid, clientID, True)
-                        elif tp > 10 and gid == 14:
+                        elif tp > 10 and sgid == 14:
                             # premiuem
                             ts3.requestClientSetIsTalker(schid, clientID, True)
-                        elif tp > 15 and gid == 30:
+                        elif tp > 15 and sgid == 30:
                             # premiuem +
                             ts3.requestClientSetIsTalker(schid, clientID, True)
 
@@ -161,60 +167,77 @@ class Gsurvival(ts3plugin):
                     if self.kick_m:
                         ts3.requestSendPrivateTextMsg(schid, self.kick_msg, clientID)
 
-
 class SettingsDialog(QDialog):
-    def __init__(self, gsurvival, parent=None):
-        self.gs = gsurvival
-        super(QDialog, self).__init__(parent)
-        setupUi(self, os.path.join(ts3.getPluginPath(), "pyTSon", "ressources", "gsurvival", "gsurvival.ui"))
-        self.setWindowTitle("Gsurvival by Luemmel")
-        # self.btn_add_domain.clicked.connect(self.add_domain)
-        self.btn_anwenden.clicked.connect(self.save_changes)
+    try:
+        def __init__(self, gsurvival, parent=None):
+            try:
+                self.gs = gsurvival
+                super(QDialog, self).__init__(parent)
+                setupUi(self, os.path.join(getPluginPath(), "pyTSon", "scripts", "gsurvival", "gsurvival.ui"))
+                self.setWindowTitle("Gsurvival by Luemmel")
+                # self.btn_add_domain.clicked.connect(self.add_domain)
+                self.btn_anwenden.clicked.connect(self.save_changes)
 
-        self.pixmap = QPixmap(os.path.join(ts3.getPluginPath(), "pyTSon", "ressources", "gsurvival", "gsurvival.png"))
-        self.label_logo.setPixmap(self.pixmap)
+                self.pixmap = QPixmap(os.path.join(getPluginPath(), "pyTSon", "scripts", "gsurvival", "gsurvival.png"))
+                self.label_logo.setPixmap(self.pixmap)
 
-        self.cb_friend_o.setChecked(self.gs.friend_o)
-        self.cb_friend_tp.setChecked(self.gs.friend_tp)
-        self.cb_friend_msg.setChecked(self.gs.friend_m)
-        self.input_friend.setText(self.gs.friend_msg)
+                self.cb_friend_o.setChecked(self.gs.friend_o)
+                self.cb_friend_tp.setChecked(self.gs.friend_tp)
+                self.cb_friend_msg.setChecked(self.gs.friend_m)
+                self.input_friend.setText(self.gs.friend_msg)
 
-        self.cb_block_cb.setChecked(self.gs.block_cb)
-        self.cb_block_msg.setChecked(self.gs.block_m)
-        self.input_block.setText(self.gs.block_msg)
+                self.cb_block_cb.setChecked(self.gs.block_cb)
+                self.cb_block_msg.setChecked(self.gs.block_m)
+                self.input_block.setText(self.gs.block_msg)
 
-        self.cb_kick.setChecked(self.gs.kick)
-        self.cb_kick_option.setChecked(self.gs.kick_option)
-        self.cb_kick_msg.setChecked(self.gs.kick_m)
-        self.input_kick.setText(self.gs.kick_msg)
+                self.cb_kick.setChecked(self.gs.kick)
+                self.cb_kick_option.setChecked(self.gs.kick_option)
+                self.cb_kick_msg.setChecked(self.gs.kick_m)
+                self.input_kick.setText(self.gs.kick_msg)
+            except:
+                try:
+                    from traceback import format_exc; ts3.logMessage(format_exc(), ts3defines.LogLevel.LogLevel_ERROR, "PyTSon Script", 0)
+                except:
+                    try:
+                         from traceback import format_exc; print(format_exc())
+                    except:
+                        print("Unknown Error")
 
-    def save_changes(self):
-        # Friend
-        self.gs.friend_o = self.cb_friend_o.isChecked()
-        self.gs.friend_tp = self.cb_friend_tp.isChecked()
-        self.gs.friend_m = self.cb_friend_msg.isChecked()
-        self.gs.friend_msg = self.input_friend.toPlainText()
-        # Block
-        self.gs.block_cb = self.cb_block_cb.isChecked()
-        self.gs.block_m = self.cb_block_msg.isChecked()
-        self.gs.block_msg = self.input_block.toPlainText()
-        # Autokick
-        self.gs.kick = self.cb_kick.isChecked()
-        self.gs.kick_option = self.cb_kick_option.isChecked()
-        self.gs.kick_m = self.cb_kick_msg.isChecked()
-        self.gs.kick_msg = self.input_kick.toPlainText()
+        def save_changes(self):
+            # Friend
+            self.gs.friend_o = self.cb_friend_o.isChecked()
+            self.gs.friend_tp = self.cb_friend_tp.isChecked()
+            self.gs.friend_m = self.cb_friend_msg.isChecked()
+            self.gs.friend_msg = self.input_friend.toPlainText()
+            # Block
+            self.gs.block_cb = self.cb_block_cb.isChecked()
+            self.gs.block_m = self.cb_block_msg.isChecked()
+            self.gs.block_msg = self.input_block.toPlainText()
+            # Autokick
+            self.gs.kick = self.cb_kick.isChecked()
+            self.gs.kick_option = self.cb_kick_option.isChecked()
+            self.gs.kick_m = self.cb_kick_msg.isChecked()
+            self.gs.kick_msg = self.input_kick.toPlainText()
 
-        self.gs.db.exec_("UPDATE settings SET ""friend_o_active = "+str(int(self.gs.friend_o))+", "
-                         "friend_tp_active = "+str(int(self.gs.friend_tp))+", "
-                         "friend_msg_active = "+str(int(self.gs.friend_m))+", "
-                         "friend_msg = '"+self.gs.friend_msg+"', "
-                         "block_cb_active = "+str(int(self.gs.block_cb))+", "
-                         "block_msg_active = "+str(int(self.gs.block_m))+", "
-                         "block_msg = '"+self.gs.block_msg+"', "
-                         "kick_active = "+str(int(self.gs.kick))+", "
-                         "kick_option_active = "+str(int(self.gs.kick_option))+", "
-                         "kick_msg_active = "+str(int(self.gs.kick_m))+", "
-                         "kick_msg = '"+self.gs.kick_msg+"'")
+            self.gs.db.exec_("UPDATE settings SET ""friend_o_active = "+str(int(self.gs.friend_o))+", "
+                             "friend_tp_active = "+str(int(self.gs.friend_tp))+", "
+                             "friend_msg_active = "+str(int(self.gs.friend_m))+", "
+                             "friend_msg = '"+self.gs.friend_msg+"', "
+                             "block_cb_active = "+str(int(self.gs.block_cb))+", "
+                             "block_msg_active = "+str(int(self.gs.block_m))+", "
+                             "block_msg = '"+self.gs.block_msg+"', "
+                             "kick_active = "+str(int(self.gs.kick))+", "
+                             "kick_option_active = "+str(int(self.gs.kick_option))+", "
+                             "kick_msg_active = "+str(int(self.gs.kick_m))+", "
+                             "kick_msg = '"+self.gs.kick_msg+"'")
 
-        ts3.printMessageToCurrentTab("[[b]Gsurvival[/b]] Die Einstellungen wurden gespeichert.")
+            ts3.printMessageToCurrentTab("[[b]Gsurvival[/b]] Die Einstellungen wurden gespeichert.")
+    except:
+        try:
+            from traceback import format_exc; ts3.logMessage(format_exc(), ts3defines.LogLevel.LogLevel_ERROR, "PyTSon Script", 0)
+        except:
+            try:
+                from traceback import format_exc;  print(format_exc())
+            except:
+                print("Unknown Error")
 
